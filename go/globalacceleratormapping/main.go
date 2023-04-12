@@ -23,14 +23,15 @@ type routingMap struct {
 func main() {
 
 	var (
-		dynamoTableName  = flag.String("dynamoTableName", "", "The name of the dynamoDB table to use")
-		acceleratorArn   = flag.String("acceleratorArn", "", "The ARN of the Global Accelerator Custom Router to read from")
-		endpointGroupArn = flag.String("endpointGroupArn", "", "The ARN of the Global Accelerator endpoint to read from")
+		dynamoTableName   = flag.String("dynamoTableName", "", "The name of the dynamoDB table to use")
+		dynamoTableRegion = flag.String("dynamoTableRegion", "", "The region of the dynamoDB table to use")
+		acceleratorArn    = flag.String("acceleratorArn", "", "The ARN of the Global Accelerator Custom Router to read from")
+		endpointGroupArn  = flag.String("endpointGroupArn", "", "The ARN of the Global Accelerator endpoint to read from")
 	)
 
 	flag.Parse()
 
-	if *dynamoTableName == "" || *acceleratorArn == "" || *endpointGroupArn == "" {
+	if *dynamoTableName == "" || *dynamoTableRegion == "" || *acceleratorArn == "" || *endpointGroupArn == "" {
 		flag.Usage()
 	}
 
@@ -44,7 +45,7 @@ func main() {
 		errorExit("Loading AWS config: %s", err)
 	}
 
-	cfgEUWest1, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion("eu-west-1"))
+	cfgEUWest1, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(*dynamoTableRegion))
 	if err != nil {
 		errorExit("Loading AWS config: %s", err)
 	}
@@ -72,11 +73,13 @@ func main() {
 
 	loop := 0
 	for loop != 1 {
+		log.Printf("Updating %d records", MaxResults)
 		mappings, err := globalAcceleratorSVC.ListCustomRoutingPortMappings(ctx, &ListCustomRoutingPortMappingsInput)
 		if err != nil {
 			errorExit("Check Existing Global Accelerators: %s", err)
 		}
 		for _, v := range mappings.PortMappings {
+
 			routingMap := routingMap{
 				ExternalIP:      ipAddresses,
 				ExternalPort:    *v.AcceleratorPort,
