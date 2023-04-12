@@ -45,13 +45,13 @@ func main() {
 		errorExit("Loading AWS config: %s", err)
 	}
 
-	cfgEUWest1, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(*dynamoTableRegion))
+	cfgDDB, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(*dynamoTableRegion))
 	if err != nil {
 		errorExit("Loading AWS config: %s", err)
 	}
 
 	globalAcceleratorSVC := globalaccelerator.NewFromConfig(cfgUSWest2)
-	dynamodbClient := dynamodb.NewFromConfig(cfgEUWest1)
+	dynamodbClient := dynamodb.NewFromConfig(cfgDDB)
 
 	DescribeCustomRoutingAcceleratorInput := globalaccelerator.DescribeCustomRoutingAcceleratorInput{
 		AcceleratorArn: acceleratorArn,
